@@ -55,7 +55,7 @@ The message parser needs to implement:
 
 For example if your messages are encoded in Avro and look loosely like:
 ```json
-{ "event": {"name":"myEventName"
+{ "event": {"name":"myEventName",
             "timestamp":"00:00:00:12/12/12"}},
   "my_field":"value",
   // etc
@@ -97,7 +97,7 @@ The reader does(surprise) the reading and pushes the read rad messages to the ha
 
 It implements:
 
-* `read` : an infinite loop that consumes messages on all the specified topics (see [setup](#setup)) and sends them to the handler
+* `read` : an infinite loop that consumes messages on all the specified topics (see [setup](#setup) below) and sends them to the handler
 
 Here's how you would use it:
 
