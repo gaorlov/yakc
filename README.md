@@ -1,6 +1,6 @@
 # YAKC: Yet another Kafka (0.8) consumer
 
-YAKC is a generic Kavka 0.8 consumer based on the now-dead Poseidon (i know, i know). It will listen to as many topics as you specify and hand them off via the handler to consumer classes.
+YAKC is a generic Kavka 0.8 consumer based on the now-dead Poseidon (i know, i know). It will listen to as many topics as you specify and hand them off via a handler to consumer classes.
 
 ## Installation
 
@@ -24,10 +24,10 @@ There are 2 main componets:
 
 ### Message Handler
 
-This is the bit of code that handles what to do with the messages once they are received. There are 2 stage to this process:
+This is the bit of code that handles what to do with the messages once they are received. There are 2 stages to this process:
 
 1. The message is parsed using *your* message parser(inherited from the `YAKC::Message` class) that does the parsing and validity checking. 
-2. The parsed message payload is broadcast to the system. You can specify your own broadcaster, but by default the handler will use [Yeller](http://www.github.com/gaorlov/yeller).
+2. The parsed message payload is broadcast to the system. You can specify your own publisher, but by default the handler will use [Yeller](http://www.github.com/gaorlov/yeller). It will broadcast 2 messages: "topic::event", and "topic::*"
 
 To set it up:
 
@@ -39,11 +39,11 @@ To set it up:
 
 And now you're ready to init the [reader](#reader)
 
-#### Broadcaster Interface
+#### Publisher Interface
 
 If you don't like Yeller, or want something that can talk cross-process, you can implement your own.
 
-The broadcaster interface is pretty simple: it has to implement
+The publisher interface is pretty simple: it has to implement
 * `broadcast( message, topic )` : This is the function that handles where the messages go.
  
 #### Message Interface
@@ -51,7 +51,8 @@ The broadcaster interface is pretty simple: it has to implement
 The message parser needs to implement:
 
 1. `parse( raw_message )` : This converts the raw Kafka data to the format of your choice
-2. `broadcastable?` : This determines whether the message is valid and shoud be broadcast. 
+2. `broadcastable?` : This determines whether the message is valid and shoud be broadcast.
+3: `event` : The name of the picked up event. This is the name that gets broadcast 
 
 For example if your messages are encoded in Avro and look loosely like:
 ```json
@@ -123,6 +124,46 @@ There are 2 ways of doing this. You can either set those up as ENV vars ("ZOOKEE
     config.suffix     = Rails.env
     config.topics     = ["clickstream", "logs", "exceptions"] # whatever you're listening for
   end
+```
+
+## Example
+
+Here's what a full experience would look like:
+
+The reader would look like
+```ruby
+  # in your initializer
+  YAKC.configure do |config|
+    # we'll assume the rest are set up in the env
+    config.logger     = Rails.logger
+  end
+```
+
+In your reader job
+
+```ruby
+  handler = YAKC::MessageBroadcaster.new message_class: AvroMessage
+  reader = YAKC::Reader.new message_handler: handler
+
+  reader.read
+```
+
+And the consumers would listen to the events
+
+Let's say you have an app that listens to exceptions that we pass around in kafka. It then stores them in a DB and passesthem off to Honeybadger. Your `Exception` model could do something like
+
+```ruby
+class Exception < ActiveRecord::Base
+  include Yaller::Subscribable
+
+  # we don't care about the event type, so we subscribe to "exception::*"
+  subscribe with: :from_kafka_event, to: "exception::*"
+
+  def self.from_kafka_event( message )
+    create message
+    Honeybadger.notify message
+  end
+end
 ```
 
 ## Development
