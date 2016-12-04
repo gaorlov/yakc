@@ -1,27 +1,22 @@
 module YAKC
   class Reader
-    attr_reader :message_handler, :app, :suffix, :topics
+    attr_reader :message_handler
 
     def initialize( options = {} )
-      @message_handler  = options[:message_handler]
-      @app              = options[:app]
-      @suffix           = options[:suffix]
-      @topics           = options[:topics]
+      @message_handler  = options.delete( :message_handler ){|_| raise KeyError, "YAKC::Reader initialized without a message handler. Please specify one so that your receives messages don't end up on the floor. For more info, go to: https://github.com/gaorlov/yakc#message-handler" }
+      @config           = YAKC.configuration
     end
 
     def read
       consumers.map do |consumer|
-        results = []
-
         consumer.fetch do |partition, bulk|
           bulk.each do |message|
             message_handler.handle topic, message
           end
         end
       end
-    rescue  Poseidon::Errors::OffsetOutOfRange => e
+    rescue => e
       YACK.logger.error e
-      []
     end
 
     private
@@ -31,12 +26,12 @@ module YAKC
         begin
           Poseidon::ConsumerGroup.new(
           "#{app}-#{topic}-consumer-#{suffix}", 
-          config['servers'], 
-          config['zookeeper_servers'], 
+          @config.brokers,
+          @config.zookeepers, 
           topic,
           {})
         rescue => e
-          Rails.logger.info e
+          YAKC.logger.error e
           nil
         end
       end.compact

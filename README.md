@@ -24,40 +24,106 @@ There are 2 main componets:
 
 ### Message Handler
 
-This is the bit of code that handles what to do with the messages once they are received. You can write your own, but the default one translates and broadcasts them using an AvroTranslator and the in-process [Yeller](/gaorlov/yeller) gem.
+This is the bit of code that handles what to do with the messages once they are received. There are 2 stage to this process:
+
+1. The message is parsed using *your* message parser(inherited from the `YAKC::Message` class) that does the parsing and validity checking. 
+2. The parsed message payload is broadcast to the system. You can specify your own broadcaster, but by default the handler will use [Yeller](http://www.github.com/gaorlov/yeller).
 
 To set it up:
 
 ```ruby
-  handler = YAKC::MessageBroadcaster.new pubsub: MyBroadcaster, translator: MyTranslator
-  # or, if you are okay with my defaults
-  handler = YAKC::MessageBroadcaster.new
+  handler = YAKC::MessageBroadcaster.new publisher: MyBroadcaster, message_class: MyMessageClass
+  # or, if you are okay with Yeller
+  handler = YAKC::MessageBroadcaster.new message_class: MyMessageClass
 ```
 
 And now you're ready to init the [reader](#reader)
 
-
 #### Broadcaster Interface
 
-The broadcaster interface is pretty simple: it has to respond to `broadcast message, topic)`. See [the default broadcaster](/gaorlov/yakc/lib/yack/message_broadcaster.rb) for reference
+If you don't like Yeller, or want something that can talk cross-process, you can implement your own.
 
-#### Translator Interface
+The broadcaster interface is pretty simple: it has to implement
+* `broadcast( message, topic )` : This is the function that handles where the messages go.
+ 
+#### Message Interface
 
-The translator is brick simple: It is a class with one self method you have to define: `handle( message )`. See [the avro translator](/gaorlov/yakc/lib/yack/translator/avro_translator.rb) for reference.
+The message parser needs to implement:
+
+1. `parse( raw_message )` : This converts the raw Kafka data to the format of your choice
+2. `broadcastable?` : This determines whether the message is valid and shoud be broadcast. 
+
+For example if your messages are encoded in Avro and look loosely like:
+```json
+{ "event": {"name":"myEventName"
+            "timestamp":"00:00:00:12/12/12"}},
+  "my_field":"value",
+  // etc
+}
+```
+
+Your message parser class would look something like
+
+```ruby
+class AvroMessage < YAKC::Message
+  
+  def broadcastable?
+    # an event is probably okay to transmit if we can extract its name
+    event["name"]
+  end
+
+  def event
+    @payload["event"] || {}
+  end
+
+  protected
+
+  def parse( message )
+    data = StringIO.new(message.value)
+    msg = Avro::DataFile::Reader.new(data, Avro::IO::DatumReader.new)
+    
+  rescue Avro::DataFile::DataFileError => e
+    Rails.logger.error e
+    {}
+  end
+end
+
+```
+
 
 ### Reader
 
+The reader does(surprise) the reading and pushes the read rad messages to the handler, which you have to specify.
 
+It implements:
 
+* `read` : an infinite loop that consumes messages on all the specified topics (see [setup](#setup)) and sends them to the handler
 
+Here's how you would use it:
+
+```ruby
+  handler = YAKC::MessageBroadcaster.new message_class: AvroMessage
+  reader = YAKC::Reader.new message_handler: handler
+
+  reader.read
+```
 
 ## Setup
 
-You will need to set up your message handler and a translator(there's already one you can use: Avro)
+And now for the full setup. You will need to specify the `zookeepers`; the Kafka `brokers`; the `app` and `suffix`, which are used to generate the consumer group name; the topic list; and a logger. 
 
-It's pretty straight forward:
+There are 2 ways of doing this. You can either set those up as ENV vars ("ZOOKEEPERS"(comma separated list), "BROKERS"(comma separated list), "APP", "SUFFIX", "TOPICS") and set up the logger by hand, or, you can do it in ruby, like:
 
-
+```ruby
+  YAKC.configure do |config|
+    config.logger     = Rails.logger
+    config.zookeepers = ["localhost:9092"]
+    config.brokers    = ["localhost:2181"]
+    config.app        = "MyApp"
+    config.suffix     = Rails.env
+    config.topics     = ["clickstream", "logs", "exceptions"] # whatever you're listening for
+  end
+```
 
 ## Development
 

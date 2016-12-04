@@ -1,36 +1,27 @@
 module YAKC
   class MessageBroadcaster
-    attr_accessor :pubsub, :translator
+    attr_accessor :publisher, :message_class
 
     def initialize(options= {})
-      @pubsub     = options[:pubsub]      || Yeller
-      @translator = options[:translator]  || YACK::Translator::AvroTranslator
+      @publisher        = options[:publisher] || Yeller
+      @message_class = options[:message_class]
     end
 
     def handle( topic, message )
-      msg = @translator.translate( message )
-      if broadcastable? msg
-        @pubsub.broadcast msg, broadcast_key(consumer.topic, msg)
-        @pubsub.broadcast msg, generic_broadcast_key(consumer.topic, msg)
+      msg = @message_class.new( message )
+      if msg.broadcastable?
+        # broadcast the specific topic event 
+        @publisher.broadcast msg.payload, broadcast_key( consumer.topic, msg.event )
+        
+        # broadcast that AN event happened on the topic for generic topic consumers
+        @publisher.broadcast msg.payload, broadcast_key( consumer.topic, "*" )
       end
     end
 
     private
 
-    def broadcast_key( topic, message )
-      key_for topic, message["event"]["name"]
-    end
-
-    def generic_broadcast_key( topic, message )
-      key_for topic, "*"
-    end
-
-    def key_for(topic, event)
+    def broadcast_key( topic, event )
       "#{topic}::#{event}"
-    end
-
-    def broadcastable?( message )
-      message["event"] && message["event"]["name"]
     end
   end
 end
