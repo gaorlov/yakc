@@ -23,18 +23,13 @@ module YAKC
 
     def consumers
       @consumers ||= topics.map do |topic|
-        begin
-          Poseidon::ConsumerGroup.new(
-          "#{app}-#{topic}-consumer-#{suffix}", 
-          @config.brokers,
-          @config.zookeepers, 
-          topic,
-          {})
-        rescue => e
-          YAKC.logger.error e
-          nil
-        end
-      end.compact
+        Poseidon::ConsumerGroup.new(
+        "#{app}-#{topic}-consumer-#{suffix}", 
+        @config.brokers,
+        @config.zookeepers, 
+        topic,
+        {})
+      end
     end
   end
 end
