@@ -154,7 +154,7 @@ Let's say you have an app that listens to exceptions that we pass around in kafk
 
 ```ruby
 class Exception < ActiveRecord::Base
-  include Yaller::Subscribable
+  include Yeller::Subscribable
 
   # we don't care about the event type, so we subscribe to "exception::*"
   subscribe with: :from_kafka_event, to: "exception::*"
