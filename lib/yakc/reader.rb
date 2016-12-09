@@ -2,12 +2,14 @@ module YAKC
   class Reader
     attr_reader :message_handler
 
-    def initialize( options = {} )
-      @message_handler  = options.delete( :message_handler ){|_| raise KeyError, "YAKC::Reader initialized without a message handler. Please specify one so that your receives messages don't end up on the floor. For more info, go to: https://github.com/gaorlov/yakc#message-handler" }
+    def initialize( message_handler: )
+      @message_handler  = message_handler
       @config           = YAKC.configuration      
+
+      raise KeyError, "YAKC::Reader initialized without a message handler. Please specify one so that your receives messages don't end up on the floor. For more info, go to: https://github.com/gaorlov/yakc#message-handler" unless message_handler
       
       Signal.trap("INT") do
-        self.class.terminated = true
+        @terminated = true
       end
     end
 
@@ -18,8 +20,8 @@ module YAKC
             bulk.each do |message|
               message_handler.handle topic, message
             end
-            return if terminated
           end
+          return if terminated
         end
       end
     rescue => e
