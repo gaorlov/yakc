@@ -27,7 +27,7 @@ There are 2 main componets:
 This is the bit of code that handles what to do with the messages once they are received. There are 2 stages to this process:
 
 1. The message is parsed using *your* message parser(inherited from the `YAKC::Message` class) that does the parsing and validity checking. 
-2. The parsed message payload is broadcast to the system. You can specify your own publisher, but by default the handler will use [Yeller](http://www.github.com/gaorlov/yeller). It will broadcast 2 messages: "topic::event", and "topic::*"
+2. The parsed message payload is broadcast to the system. You can specify your own publisher, but by default the handler will use [Yeller](http://www.github.com/gaorlov/yeller). It will broadcast the message with the key: "topic::event"
 
 To set it up:
 
@@ -156,8 +156,8 @@ Let's say you have an app that listens to exceptions that we pass around in kafk
 class Exception < ActiveRecord::Base
   include Yeller::Subscribable
 
-  # we don't care about the event type, so we subscribe to "exception::*"
-  subscribe with: :from_kafka_event, to: "exception::*"
+  # we don't care about the event type, so we subscribe to "exception::.*"
+  subscribe with: :from_kafka_event, to: "exception::.*"
 
   def self.from_kafka_event( message )
     create message

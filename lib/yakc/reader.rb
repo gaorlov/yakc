@@ -4,19 +4,27 @@ module YAKC
 
     def initialize( options = {} )
       @message_handler  = options.delete( :message_handler ){|_| raise KeyError, "YAKC::Reader initialized without a message handler. Please specify one so that your receives messages don't end up on the floor. For more info, go to: https://github.com/gaorlov/yakc#message-handler" }
-      @config           = YAKC.configuration
+      @config           = YAKC.configuration      
+      
+      Signal.trap("INT") do
+        self.class.terminated = true
+      end
     end
 
     def read
-      consumers.map do |consumer|
-        consumer.fetch do |partition, bulk|
-          bulk.each do |message|
-            message_handler.handle topic, message
+      loop do
+        consumers.map do |consumer|
+          consumer.fetch do |partition, bulk|
+            bulk.each do |message|
+              message_handler.handle topic, message
+            end
+            return if terminated
           end
         end
       end
     rescue => e
       YACK.logger.error e
+      retry
     end
 
     private
