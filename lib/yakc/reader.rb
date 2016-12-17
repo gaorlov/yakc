@@ -1,6 +1,6 @@
 module YAKC
   class Reader
-    attr_reader :message_handler
+    attr_reader :message_handler, :terminated
 
     def initialize( message_handler: )
       @message_handler  = message_handler
