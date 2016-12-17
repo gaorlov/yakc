@@ -1,6 +1,6 @@
 module YAKC
   module Instrumenter
-    class FallthroughInstrumenter < Base
+    class FallthroughInstrumenter
 
       def instrument( message )
         yield

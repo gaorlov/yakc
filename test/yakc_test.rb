@@ -5,7 +5,19 @@ class YakcTest < Minitest::Test
     refute_nil ::Yakc::VERSION
   end
 
-  def test_it_does_something_useful
-    assert false
+  def test_can_initialize_stack
+    handler = YAKC::MessageBroadcaster.new message_parser: TestMessage, instrumenter: TestInstrumenter
+    reader = YAKC::Reader.new message_handler: handler
+    assert reader
+  end
+
+  def test_configuration_is_settable
+    refute YAKC.configuration.app
+
+    YAKC.configure do |config|
+      config.app = "test"
+    end
+
+    assert_equal "test", YAKC.configuration.app
   end
 end

@@ -28,6 +28,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "yeller"
   spec.add_dependency "poseidon_cluster", "0.3.2.avvo3"
+  spec.add_dependency "activesupport"
 
   spec.add_development_dependency "bundler", "~> 1.12"
   spec.add_development_dependency "rake", "~> 10.0"

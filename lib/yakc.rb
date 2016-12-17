@@ -1,4 +1,7 @@
 require "yakc/version"
+require 'active_support'
+require 'active_support/core_ext/module/delegation'
+require 'yeller'
 
 module YAKC
   autoload :Configuration,            'yakc/configuration'

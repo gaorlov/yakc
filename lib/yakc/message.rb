@@ -7,11 +7,11 @@ module YAKC
     end
 
     def broadcastable?
-      raise NotImplemented
+      # implement me
     end
 
     def event
-      raise NotImplemented
+      # implement me
     end
 
     protected
