@@ -7,6 +7,10 @@ class ReaderTest < Minitest::Test
   end
 
   def test_sigint_stops_the_read_loop
-    
+    Thread.new do
+      @reader.read
+    end
+    Process.kill "INT", Process.pid
+    assert @reader
   end
 end
