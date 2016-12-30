@@ -32,9 +32,9 @@ This is the bit of code that handles what to do with the messages once they are 
 To set it up:
 
 ```ruby
-  handler = YAKC::MessageBroadcaster.new publisher: MyBroadcaster, message_class: MyMessageClass
+  handler = YAKC::MessageBroadcaster.new publisher: MyBroadcaster, message_parser: MyMessageClass
   # or, if you are okay with Yeller
-  handler = YAKC::MessageBroadcaster.new message_class: MyMessageClass
+  handler = YAKC::MessageBroadcaster.new message_parser: MyMessageClass
 ```
 
 And now you're ready to init the [reader](#reader)
@@ -103,7 +103,7 @@ It implements:
 Here's how you would use it:
 
 ```ruby
-  handler = YAKC::MessageBroadcaster.new message_class: AvroMessage
+  handler = YAKC::MessageBroadcaster.new message_parser: AvroMessage
   reader = YAKC::Reader.new message_handler: handler
 
   reader.read
@@ -142,7 +142,7 @@ The reader would look like
 In your reader job
 
 ```ruby
-  handler = YAKC::MessageBroadcaster.new message_class: AvroMessage
+  handler = YAKC::MessageBroadcaster.new message_parser: AvroMessage
   reader = YAKC::Reader.new message_handler: handler
 
   reader.read
