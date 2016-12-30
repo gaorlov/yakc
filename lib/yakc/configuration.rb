@@ -8,7 +8,7 @@ module YAKC
       zookeepers  = ENV.fetch("ZOOKEEPERS", "localhost:2181").split(",") 
       app         = ENV["APP"]
       suffix      = ENV["SUFFIX"]
-      topics      = ENV["TOPICS"]
+      topics      = ENV["TOPICS"].split(",")
     end
   end
 end
