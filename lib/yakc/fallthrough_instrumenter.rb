@@ -1,10 +1,8 @@
 module YAKC
-  module Instrumenter
-    class FallthroughInstrumenter
+  class FallthroughInstrumenter
 
-      def instrument( message )
-        yield
-      end
+    def instrument( message )
+      yield
     end
   end
 end

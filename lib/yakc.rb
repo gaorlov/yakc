@@ -5,7 +5,7 @@ require 'yeller'
 
 module YAKC
   autoload :Configuration,            'yakc/configuration'
-  autoload :FallthroughInstrumenter,  'yakc/fallthorugh_instrumenter'
+  autoload :FallthroughInstrumenter,  'yakc/fallthrough_instrumenter'
   autoload :MessageBroadcaster,       'yakc/message_broadcaster'
   autoload :Reader,                   'yakc/reader'
   autoload :Message,                  'yakc/message'
@@ -14,12 +14,12 @@ module YAKC
     attr_writer :configuration
   end
 
-  def self.configuration
-    @configuration ||= Configuration.new
-  end
-
   def self.configure
     yield configuration
+  end
+  
+  def self.configuration
+    @configuration ||= YAKC::Configuration.new
   end
 
   delegate :logger, to: :configuration

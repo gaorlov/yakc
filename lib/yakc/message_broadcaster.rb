@@ -15,7 +15,7 @@ module YAKC
       @instrumenter.instrument( msg ) do 
         if msg.broadcastable?
           # broadcast the specific topic event 
-          @publisher.broadcast msg.payload, broadcast_key( topic, msg.event )        
+          @publisher.broadcast msg.payload, broadcast_key( topic, msg.event )
         end
       end
     end
