@@ -27,25 +27,17 @@ There are 2 main componets:
 This is the bit of code that handles what to do with the messages once they are received. There are 2 stages to this process:
 
 1. The message is parsed using *your* message parser(inherited from the `YAKC::Message` class) that does the parsing and validity checking. 
-2. The parsed message payload is broadcast to the system. You can specify your own publisher, but by default the handler will use [Yeller](http://www.github.com/gaorlov/yeller). It will broadcast the message with the key: "topic::event"
+2. The parsed message payload is broadcast using `ActiveSupport::Notifications`
+3: It will broadcast the message with the key: "topic::event"
 
 To set it up:
 
 ```ruby
-  handler = YAKC::MessageBroadcaster.new publisher: MyBroadcaster, message_parser: MyMessageClass
-  # or, if you are okay with Yeller
   handler = YAKC::MessageBroadcaster.new message_parser: MyMessageClass
 ```
 
 And now you're ready to init the [reader](#reader)
 
-#### Publisher Interface
-
-If you don't like Yeller, or want something that can talk cross-process, you can implement your own.
-
-The publisher interface is pretty simple: it has to implement
-* `broadcast( message, topic )` : This is the function that handles where the messages go.
- 
 #### Message Interface
 
 The message parser needs to implement:

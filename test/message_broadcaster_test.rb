@@ -2,7 +2,9 @@ require 'test_helper'
 
 class MessageBroadcasterTest < Minitest::Test
   def setup
-    @broadcaster = YAKC::MessageBroadcaster.new message_parser: TestMessage, instrumenter: TestInstrumenter, publisher: TestPublisher
+    @broadcaster = YAKC::MessageBroadcaster.new message_parser: TestMessage, instrumenter: TestInstrumenter
+    Subscriber.message        = nil
+    Subscriber.broadcast_key  = nil
   end
 
   def test_broadcaster_instruments
@@ -11,19 +13,19 @@ class MessageBroadcasterTest < Minitest::Test
   end
 
   def test_broadcaster_broadcasts
-    @broadcaster.publisher.message = "default"
+    Subscriber.message = "default"
 
     @broadcaster.handle( "topic", RawMessageGenerator.good_event(event: "instrumented_event") )
-    
-    assert_equal "instrumented_event", @broadcaster.publisher.message[:event][:name]
-    assert_equal "topic::instrumented_event", @broadcaster.publisher.broadcast_key
+
+    assert_equal "instrumented_event", Subscriber.message[:event][:name]
+    assert_equal "topic::instrumented_event", Subscriber.broadcast_key
 
   end
 
   def test_broadcaster_does_not_broadcast_garbage
-    @broadcaster.publisher.message = "default"    
+    Subscriber.message = "default"    
     @broadcaster.handle( "topic", RawMessageGenerator.garbage_event )
 
-    assert_equal "default", @broadcaster.publisher.message
+    assert_equal "default", Subscriber.message
   end
 end

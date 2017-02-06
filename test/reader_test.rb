@@ -2,7 +2,7 @@ require 'test_helper'
 
 class ReaderTest < Minitest::Test
   def setup
-    @broadcaster = YAKC::MessageBroadcaster.new message_parser: TestMessage, instrumenter: TestInstrumenter, publisher: TestPublisher
+    @broadcaster = YAKC::MessageBroadcaster.new message_parser: TestMessage, instrumenter: TestInstrumenter
     @reader = YAKC::Reader.new message_handler: @broadcaster
   end
 

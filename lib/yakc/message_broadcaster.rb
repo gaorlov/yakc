@@ -1,9 +1,8 @@
 module YAKC
   class MessageBroadcaster
-    attr_accessor :publisher, :message_class, :instrumenter
+    attr_accessor :message_class, :instrumenter
 
-    def initialize( publisher: Yeller, instrumenter: FallthroughInstrumenter, message_parser: )
-      @publisher        = publisher
+    def initialize( instrumenter: FallthroughInstrumenter, message_parser: )
       @message_class    = message_parser
       @instrumenter     = instrumenter.new
       raise "MessageBroadcaster must have a valid message class" unless @message_class
@@ -15,7 +14,7 @@ module YAKC
       @instrumenter.instrument( msg ) do 
         if msg.broadcastable?
           # broadcast the specific topic event 
-          @publisher.broadcast msg.payload, broadcast_key( topic, msg.event )
+          ActiveSupport::Notifications.instrument broadcast_key( topic, msg.event ), message: msg.payload
         end
       end
     end

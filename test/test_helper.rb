@@ -55,12 +55,17 @@ class TestInstrumenter
   end
 end
 
-class TestPublisher
+class Subscriber
   class << self
     attr_accessor :message, :broadcast_key
-    def broadcast( message, broadcast_key )
-      @message = message
-      @broadcast_key = broadcast_key
-    end
+  end
+
+  ActiveSupport::Notifications.subscribe(/.*/) do |name, start, finish, id, payload|
+    self.message = payload[:message]
+  end
+
+  ActiveSupport::Notifications.subscribe("topic::instrumented_event") do |name, start, finish, id, payload|
+    self.message = payload[:message]
+    self.broadcast_key = name
   end
 end
